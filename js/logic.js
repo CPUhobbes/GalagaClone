@@ -54,7 +54,10 @@ function fireMissle(ID){
 	visibility: "visible"
 
 	});
-	$("#missle"+ID).animate({top: "-="+SCALAR*200}, 1000,"linear");   /////FIX THIS !!!!!
+	$("#missle"+ID).animate({top: (-10*SCALAR)}, 500, "linear", function(){
+		$("#missle"+ID).remove();
+
+	});   
 
 	console.log($("#ship").offset().left);
 	console.log($("#ship").offset().top);
@@ -112,13 +115,6 @@ function moveShip(key){
             $("#ship").animate({left: "+="+SCALAR*2}, 0);  
         }
 }
-
-
-
-
-
-
-
 
 function initializeGame(){
 	checkBrowserDim();
