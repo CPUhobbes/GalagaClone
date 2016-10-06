@@ -2,7 +2,9 @@
 
 var IMG_LOC = "./img/";
 var SPACE_SHIP = "ship.png";
+var ALIEN_BEE = "alien_bee.png"
 var MISSLE = "missle.png";
+
 var SCREEN_HEIGHT = 288;
 var SCREEN_WIDTH = 224;
 var SCALAR = 3; //3 default
@@ -12,8 +14,38 @@ var CENTER;
 var keyPresses = {}  //keyPressArray
 var missleAvaliable = true;
 var missleID=0;
+var alienID = 0;
 var misslePos = "left";
+var ship;
 
+
+
+//OBJECTS
+function Ship(){
+	this.src = IMG_LOC+SPACE_SHIP,
+	this.alt = "Ship",
+	this.width = 15*SCALAR,
+	this.id = "ship",
+	this.left = SCREEN_WIDTH*SCALAR/2-this.width/2,
+	this.right = SCREEN_WIDTH*SCALAR/2 + this.width/2
+}
+
+function AlienBee(){
+	this.src = IMG_LOC+ALIEN_BEE,
+	this.alt = "Alien Bee",
+	this.width = 15*SCALAR,
+	this.id = "alien"
+	// this.left = SCREEN_WIDTH*SCALAR/2-this.width/2,
+	// this.right = SCREEN_WIDTH*SCALAR/2 + this.width/2
+}
+
+function ShipMissle(){
+	this.src = IMG_LOC+MISSLE,
+	this.alt = "Missle",
+	this.width = 3*SCALAR+"px",
+	this.id = "missle"+missleID,
+	this.class = "missle"
+}
 
 //FUNCTIONS
 function checkBrowserDim(){
@@ -25,23 +57,26 @@ function checkBrowserDim(){
 }
 
 function createShip(){
-
+	
 	$("#space_ship_area").append($('<img>').attr({
-		src: IMG_LOC+SPACE_SHIP,
-		alt: "Ship",
-		width: 20*SCALAR+"px",
-		id: "ship"
+		src: ship.src,
+		alt: ship.alt,
+		width: ship.width+"px",
+		id: ship.id
 	}));
 	$('#ship').css({
-		left: SCREEN_WIDTH*SCALAR/2
+		left: ship.left
 	});
+
+	ship.top = $("#ship").offset().top;
+	
 }
 
-function fireMissle(ID){
+function fireMissle(obj, ID){
 	var imgBuffer= 0;
 	if(misslePos === "right"){
 		misslePos = "left";
-		imgBuffer = 17*SCALAR;
+		imgBuffer = 13*SCALAR;
 	}
 	else{
 		misslePos = "right";
@@ -54,26 +89,36 @@ function fireMissle(ID){
 	visibility: "visible"
 
 	});
-	$("#missle"+ID).animate({top: (-10*SCALAR)}, 500, "linear", function(){
-		$("#missle"+ID).remove();
+	$("#missle"+ID).animate({top: (-10*SCALAR)},{ 
+		duration: 500, 
+		easing: "linear", 
+		step: function(){
+			console.log($("#missle"+ID).position().top); //Check missle for colllions
+			},
+		done: function(){
+				$("#missle"+ID).remove();
+			}
 
 	});   
 
-	console.log($("#ship").offset().left);
-	console.log($("#ship").offset().top);
+	// console.log($("#ship").offset().left);
+	// console.log($("#ship").offset().top);
+
 
 }
 
 function createMissle(){
+	var missle = new ShipMissle();
 	$("#screen").append($('<img>').attr({
-		src: IMG_LOC+MISSLE,
-		alt: "Missle",
-		width: 3*SCALAR+"px",
-		id: "missle"+missleID,
-		class: "missle"
+		src: missle.src,
+		alt: missle.alt,
+		width: missle.width+"px",
+		id: missle.id,
+		class: missle.class
 	}));
-	fireMissle(missleID);
+	fireMissle(missle, missleID);
 	missleID+=1;
+	delete missle;
 }
 
 function adjustScreen(){
@@ -107,11 +152,11 @@ function animateKeyPress() {
 }
 
 function moveShip(key){
-	if (key === 37 || key === 65) {
-            $("#ship").animate({left: "-="+SCALAR*2}, 0);                
+	if ((key === 37 || key === 65) && $("#ship").position().left > 0) {
+            $("#ship").animate({left: "-="+SCALAR*2}, 0);             
         }
         
-        if (key === 39 || key === 68) {
+        if ((key === 39 || key === 68) && $("#ship").position().left < SCREEN_WIDTH*SCALAR-15*SCALAR) { //15*SCALAR is ship width from ship obj
             $("#ship").animate({left: "+="+SCALAR*2}, 0);  
         }
 }
@@ -119,6 +164,7 @@ function moveShip(key){
 function initializeGame(){
 	checkBrowserDim();
 	adjustScreen();
+	ship = new Ship();
 	createShip();
 }
 
