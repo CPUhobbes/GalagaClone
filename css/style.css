@@ -5,21 +5,25 @@ body{
 #screen{
 	position: relative;
 	background-image: url("../img/stars_bg.jpg");
+	font-size: 0;
 }
 
 
 #space_ship_area{
 	position: absolute;
 	bottom: 0;
-
+	font-size: 0;
 }
 
 #ship{
 	position: relative;
-
 }
 .missle{
 	position: absolute;
 	visibility: hidden;
 
+}
+.alienBee{
+	display:inline-block;
+    margin-left:20px;
 }

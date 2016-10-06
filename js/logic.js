@@ -8,7 +8,22 @@ var MISSLE = "missle.png";
 var SCREEN_HEIGHT = 288;
 var SCREEN_WIDTH = 224;
 var SCALAR = 3; //3 default
-var CENTER;
+var CENTER = 0;
+var ALIENSPACE = 20; //margin-left for each alien in css
+
+//IMAGE DIMENSIONS
+
+//Ship
+var SHIP_W = 0;
+var SHIP_H = 0;
+
+//Missle
+var MISSLE_W = 0;
+var MISSLE_H = 0;
+
+//Alien Bee
+var ALIEN_B_W = 0;
+var ALIEN_B_H = 0;
 
 //DYNAMIC VARS
 var keyPresses = {}  //keyPressArray
@@ -17,37 +32,11 @@ var missleID=0;
 var alienID = 0;
 var misslePos = "left";
 var ship;
-
-
-
-//OBJECTS
-function Ship(){
-	this.src = IMG_LOC+SPACE_SHIP,
-	this.alt = "Ship",
-	this.width = 15*SCALAR,
-	this.id = "ship",
-	this.left = SCREEN_WIDTH*SCALAR/2-this.width/2,
-	this.right = SCREEN_WIDTH*SCALAR/2 + this.width/2
-}
-
-function AlienBee(){
-	this.src = IMG_LOC+ALIEN_BEE,
-	this.alt = "Alien Bee",
-	this.width = 15*SCALAR,
-	this.id = "alien"
-	// this.left = SCREEN_WIDTH*SCALAR/2-this.width/2,
-	// this.right = SCREEN_WIDTH*SCALAR/2 + this.width/2
-}
-
-function ShipMissle(){
-	this.src = IMG_LOC+MISSLE,
-	this.alt = "Missle",
-	this.width = 3*SCALAR+"px",
-	this.id = "missle"+missleID,
-	this.class = "missle"
-}
+var alienList = [];
 
 //FUNCTIONS
+
+//Check size of browser window
 function checkBrowserDim(){
 	SCALAR = Math.floor($(window).height()/SCREEN_HEIGHT);
 	if(SCALAR === 0){
@@ -56,73 +45,8 @@ function checkBrowserDim(){
 	CENTER = Math.floor($(window).width()/2)-(SCREEN_WIDTH*SCALAR/2);
 }
 
-function createShip(){
-	
-	$("#space_ship_area").append($('<img>').attr({
-		src: ship.src,
-		alt: ship.alt,
-		width: ship.width+"px",
-		id: ship.id
-	}));
-	$('#ship').css({
-		left: ship.left
-	});
-
-	ship.top = $("#ship").offset().top;
-	
-}
-
-function fireMissle(obj, ID){
-	var imgBuffer= 0;
-	if(misslePos === "right"){
-		misslePos = "left";
-		imgBuffer = 13*SCALAR;
-	}
-	else{
-		misslePos = "right";
-		imgBuffer = 0;
-	}
-
-	$("#missle"+ID).css({
-	left: $("#ship").position().left+imgBuffer,
-	top: $("#ship").offset().top,
-	visibility: "visible"
-
-	});
-	$("#missle"+ID).animate({top: (-10*SCALAR)},{ 
-		duration: 500, 
-		easing: "linear", 
-		step: function(){
-			console.log($("#missle"+ID).position().top); //Check missle for colllions
-			},
-		done: function(){
-				$("#missle"+ID).remove();
-			}
-
-	});   
-
-	// console.log($("#ship").offset().left);
-	// console.log($("#ship").offset().top);
-
-
-}
-
-function createMissle(){
-	var missle = new ShipMissle();
-	$("#screen").append($('<img>').attr({
-		src: missle.src,
-		alt: missle.alt,
-		width: missle.width+"px",
-		id: missle.id,
-		class: missle.class
-	}));
-	fireMissle(missle, missleID);
-	missleID+=1;
-	delete missle;
-}
-
+//Adjust screen area based on browser window size
 function adjustScreen(){
-
 	$("#screen").css({
 		width: SCREEN_WIDTH*SCALAR,
 		height: SCREEN_HEIGHT*SCALAR,
@@ -132,6 +56,131 @@ function adjustScreen(){
 		width: SCREEN_WIDTH*SCALAR
 	});
 
+}
+
+function updateImageDim(){
+	//Ship
+	SHIP_W = 15*SCALAR;
+	SHIP_H = 18*SCALAR;
+
+	//Missle
+	MISSLE_W = 3*SCALAR;
+	MISSLE_H = 6*SCALAR;
+
+	//Alien Bee
+	ALIEN_B_W = 15*SCALAR;
+ 	ALIEN_B_H = 15*SCALAR;
+}
+
+function createShip(){
+	
+	$("#space_ship_area").append($('<img>').attr({
+		src: ship.src,
+		alt: ship.alt,
+		width: ship.width+"px",
+		height: ship.height+"px",
+		id: ship.id
+	}));
+	$('#ship').css({
+		left: ship.left,
+	});
+	ship.top = $("#ship").offset().top;
+}
+
+function getMissleBank(){
+	if(misslePos === "right"){
+		misslePos = "left";
+		return 13*SCALAR;
+	}
+	else{
+		misslePos = "right";
+		return 0;
+	}
+}
+
+function checkCollision(missle, spacecraft){
+	if((missle.top <= spacecraft.top+ALIEN_B_H) &&
+	 	((missle.left >= spacecraft.left+ALIENSPACE &&
+	 	missle.left <= spacecraft.left+ALIEN_B_W+ALIENSPACE) ||
+	 	(missle.left+MISSLE_W >= spacecraft.left+ALIENSPACE &&
+	 	missle.left+MISSLE_W <= spacecraft.left+ALIEN_B_W+ALIENSPACE))){
+			return true;
+	}
+	else{
+		return false;
+	}
+}
+
+
+function killAlien(alien){
+	$(alien).remove();
+
+
+}
+
+function fireMissle(missleObj, ID){
+	$("#missle"+ID).css({
+	left: ship.left+getMissleBank(),
+	top: ship.top,
+	visibility: "visible"
+
+	});
+	$("#missle"+ID).animate({top: (-10*SCALAR)},{ 
+		duration: 5000, 
+		easing: "linear", 
+		step: function(){
+				//console.log($("#missle"+ID).position().left+missleObj.width, $("#"+alienList[0].id).position().left+alienList[0].obj.width);
+				 //Check missle for colllions
+				 // if(($("#missle"+ID).position().top <= $("#"+alienList[0].id).position().top+alienList[0].obj.height) &&
+				 // 	(($("#missle"+ID).position().left >= $("#"+alienList[0].id).position().left+20 &&
+				 // 	$("#missle"+ID).position().left <= $("#"+alienList[0].id).position().left+alienList[0].obj.width+20) ||
+				 // 	($("#missle"+ID).position().left+missleObj.width >= $("#"+alienList[0].id).position().left+20 &&
+				 // 	$("#missle"+ID).position().left+missleObj.width <= $("#"+alienList[0].id).position().left+alienList[0].obj.width+20))){
+				 // 		console.log("hit");
+				 	//$("#missle"+ID).position().left+$("#missle"+ID).width()<= ){
+					 	
+					 	alienList.forEach(function(item, index){
+					 		if(checkCollision($("#missle"+ID).position(), $("#"+item.id).position())){
+					 			$("#missle"+ID).stop();
+					 			$("#missle"+ID).remove();
+					 			delete missleObj;
+					 			killAlien("#"+item.id);
+					 			alienList.splice(index,1);
+					 		}
+
+
+
+					 	});
+					//  	if(checkCollision($("#missle"+ID).position(), $("#"+alienList[0].id).position())){
+					//  		$("#missle"+ID).stop();
+					//  		$("#missle"+ID).remove();
+					//  		delete missleObj;
+					//  }
+				 // //}
+
+
+				
+			},
+		done: function(){
+				$("#missle"+ID).remove();
+				delete missleObj;
+
+			}
+	});   
+}
+
+function createMissle(){
+	var missle = new ShipMissle();
+	$("#screen").append($('<img>').attr({
+		src: missle.src,
+		alt: missle.alt,
+		width: missle.width+"px",
+		height: missle.height+"px",
+		id: missle.id,
+		class: missle.class
+	}));
+	fireMissle(missle, missleID);
+	missleID+=1;
 }
 
 function animateKeyPress() {
@@ -153,19 +202,81 @@ function animateKeyPress() {
 
 function moveShip(key){
 	if ((key === 37 || key === 65) && $("#ship").position().left > 0) {
-            $("#ship").animate({left: "-="+SCALAR*2}, 0);             
+            $("#ship").animate({left: "-="+SCALAR*2}, 0);
+            ship.left-=SCALAR*2;            
         }
         
         if ((key === 39 || key === 68) && $("#ship").position().left < SCREEN_WIDTH*SCALAR-15*SCALAR) { //15*SCALAR is ship width from ship obj
-            $("#ship").animate({left: "+="+SCALAR*2}, 0);  
+            $("#ship").animate({left: "+="+SCALAR*2}, 0); 
+            ship.left+=SCALAR*2;   
         }
 }
 
+function createAliens(){
+	var alienBee = new AlienBee()
+	var alienBeeObj = {
+		obj: alienBee,
+		id: alienBee.id
+	};
+	alienList.push(alienBeeObj); 
+	console.log(alienList[0]);
+
+
+	$("#screen").append($('<img>').attr({
+		src: alienBee.src,
+		alt: alienBee.alt,
+		width: alienBee.width+"px",
+		height: alienBee.height+"px",
+		id: alienBee.id,
+		class: alienBee.class
+	}));
+	alienID+=1;
+}
+
+//OBJECTS
+function Ship(){
+	this.src = IMG_LOC+SPACE_SHIP,
+	this.alt = "Ship",
+	this.width = 15*SCALAR,
+	this.height = 18*SCALAR,
+	this.id = "ship",
+	this.left = SCREEN_WIDTH*SCALAR/2-this.width/2,
+	this.right = SCREEN_WIDTH*SCALAR/2 + this.width/2
+}
+
+function AlienBee(){
+	this.src = IMG_LOC+ALIEN_BEE,
+	this.alt = "Alien Bee",
+	this.width = 15*SCALAR,
+	this.height = 15*SCALAR,
+	this.id = "alien"+alienID,
+	this.class = "alienBee"
+	// this.left = SCREEN_WIDTH*SCALAR/2-this.width/2,
+	// this.right = SCREEN_WIDTH*SCALAR/2 + this.width/2
+}
+
+function ShipMissle(){
+	this.src = IMG_LOC+MISSLE,
+	this.alt = "Missle",
+	this.width = 3*SCALAR,
+	this.height = 6* SCALAR,
+	this.id = "missle"+missleID,
+	this.class = "missle"
+}
+
+
+
+
+//RUN GAME
 function initializeGame(){
 	checkBrowserDim();
 	adjustScreen();
+	updateImageDim();
 	ship = new Ship();
 	createShip();
+	createAliens();
+	createAliens();
+	console.log($("#alien0").offset().top,$("#alien0").offset().left);
 }
 
 
