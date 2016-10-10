@@ -24,6 +24,7 @@ body{
 
 }
 .alienBee{
-	display:inline-block;
-    margin-left:20px;
+	/*display:inline-block;*/
+    /*margin-left:20px;*/
+    position: absolute;
 }

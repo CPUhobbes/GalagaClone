@@ -9,7 +9,6 @@ var SCREEN_HEIGHT = 288;
 var SCREEN_WIDTH = 224;
 var SCALAR = 3; //3 default
 var CENTER = 0;
-var ALIENSPACE = 20; //margin-left for each alien in css
 
 //IMAGE DIMENSIONS
 
@@ -30,6 +29,8 @@ var keyPresses = {}  //keyPressArray
 var missleAvaliable = true;
 var missleID=0;
 var alienID = 0;
+var alienLeft = 0;
+var alienTop = 0;
 var misslePos = "left";
 var ship;
 var alienList = [];
@@ -70,6 +71,7 @@ function updateImageDim(){
 	//Alien Bee
 	ALIEN_B_W = 15*SCALAR;
  	ALIEN_B_H = 15*SCALAR;
+
 }
 
 function createShip(){
@@ -100,10 +102,10 @@ function getMissleBank(){
 
 function checkCollision(missle, spacecraft){
 	if((missle.top <= spacecraft.top+ALIEN_B_H) &&
-	 	((missle.left >= spacecraft.left+ALIENSPACE &&
-	 	missle.left <= spacecraft.left+ALIEN_B_W+ALIENSPACE) ||
-	 	(missle.left+MISSLE_W >= spacecraft.left+ALIENSPACE &&
-	 	missle.left+MISSLE_W <= spacecraft.left+ALIEN_B_W+ALIENSPACE))){
+	 	((missle.left >= spacecraft.left &&
+	 	missle.left <= spacecraft.left+ALIEN_B_W) ||
+	 	(missle.left+MISSLE_W >= spacecraft.left &&
+	 	missle.left+MISSLE_W <= spacecraft.left+ALIEN_B_W))){
 			return true;
 	}
 	else{
@@ -126,7 +128,7 @@ function fireMissle(missleObj, ID){
 
 	});
 	$("#missle"+ID).animate({top: (-10*SCALAR)},{ 
-		duration: 5000, 
+		duration: 500, 
 		easing: "linear", 
 		step: function(){
 				//console.log($("#missle"+ID).position().left+missleObj.width, $("#"+alienList[0].id).position().left+alienList[0].obj.width);
@@ -140,13 +142,16 @@ function fireMissle(missleObj, ID){
 				 	//$("#missle"+ID).position().left+$("#missle"+ID).width()<= ){
 					 	
 					 	alienList.forEach(function(item, index){
-					 		if(checkCollision($("#missle"+ID).position(), $("#"+item.id).position())){
-					 			$("#missle"+ID).stop();
-					 			$("#missle"+ID).remove();
-					 			delete missleObj;
-					 			killAlien("#"+item.id);
-					 			alienList.splice(index,1);
-					 		}
+					 		if($("#missle"+ID).length>0){
+						 		if(checkCollision($("#missle"+ID).position(), $("#"+item.id).position())){
+						 			$("#missle"+ID).stop();
+						 			$("#missle"+ID).remove();
+						 			delete missleObj;
+						 			killAlien("#"+item.id);
+						 			alienList.splice(index,1);
+
+						 		}
+						 	}
 
 
 
@@ -213,24 +218,37 @@ function moveShip(key){
 }
 
 function createAliens(){
-	var alienBee = new AlienBee()
+	var alienBee = new AlienBee();
 	var alienBeeObj = {
 		obj: alienBee,
-		id: alienBee.id
+		id: alienBee.id,
+		xPos:20*SCALAR*alienLeft,
+		yPos:20*SCALAR*alienTop
 	};
 	alienList.push(alienBeeObj); 
-	console.log(alienList[0]);
+	console.log(alienList[alienID]);
 
 
-	$("#screen").append($('<img>').attr({
+	var tempImg = $('<img>').attr({
 		src: alienBee.src,
 		alt: alienBee.alt,
 		width: alienBee.width+"px",
 		height: alienBee.height+"px",
 		id: alienBee.id,
 		class: alienBee.class
-	}));
+
+	}).css({"left": alienBeeObj.xPos+"px", "top": alienBeeObj.yPos+"px"});
+	$("#screen").append(tempImg);
 	alienID+=1;
+
+	if(alienLeft>8){
+		alienLeft =0;
+		alienTop+=1;
+	}
+	else{
+		alienLeft+=1;
+	}
+	
 }
 
 //OBJECTS
@@ -264,6 +282,13 @@ function ShipMissle(){
 	this.class = "missle"
 }
 
+function generateAliens(){
+
+	for (var i = 0;i<40;++i){
+		createAliens();
+	}
+
+}
 
 
 
@@ -274,8 +299,7 @@ function initializeGame(){
 	updateImageDim();
 	ship = new Ship();
 	createShip();
-	createAliens();
-	createAliens();
+	generateAliens();
 	console.log($("#alien0").offset().top,$("#alien0").offset().left);
 }
 
